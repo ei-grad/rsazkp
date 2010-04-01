@@ -32,8 +32,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <gmpxx.h>
-
 #include "config.h"
 
 void HandleClient(int sock){
@@ -61,7 +59,7 @@ int main(){
         fprintf(stderr, "Failed to bind server socket\n");
     }
 
-    if (listen(server_socket, MAXPENDING) < 0) {
+    if (listen(server_socket, 50) < 0) {
         fprintf(stderr, "Failed to listen on server socket\n");
     }
 

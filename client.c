@@ -21,18 +21,14 @@
  */
 
 #include <stdio.h>
-#include <cstdlib>
-#include <cstring>
+#include <stdlib.h>
+#include <string.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <gmpxx.h>
-
-#include "tossing.h"
 #include "config.h"
-
 
 int Connect(char * address){
     int sock;
@@ -59,11 +55,6 @@ int Connect(char * address){
     return sock;
 }
 
-int read_rsa(mpz_class &private_key) {
-    
-    return 0;
-}
-
 int main(int argc, char * argv[]){
 
     if (argc != 2) {
@@ -72,9 +63,6 @@ int main(int argc, char * argv[]){
     }
 
     int sock = Connect(argv[2]);
-
-    mpz_class private_key;
-    read_rsa(private_key);
 
     return 0;
 }
