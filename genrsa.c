@@ -295,14 +295,44 @@ bad:
 #endif
 		l+=rsa->e->d[i];
 		}
-	BIO_printf(bio_err,"e is %ld (0x%lX)\n",l,l);
+
 	{
-	PW_CB_DATA cb_data;
-	cb_data.password = passout;
-	cb_data.prompt_info = outfile;
-	if (!PEM_write_bio_RSAPrivateKey(out,rsa,enc,NULL,0,
-		(pem_password_cb *)password_callback,&cb_data))
-		goto err;
+	
+        FILE * f_out;
+        char * tmpstr;
+        PW_CB_DATA cb_data;
+        cb_data.password = passout;
+        cb_data.prompt_info = outfile;
+    
+        tmpstr = BN_bn2dec(rsa->n);
+        BIO_printf(out, "public modulus: \n%s\n\n", tmpstr);
+        OPENSSL_free(tmpstr);
+
+        tmpstr = BN_bn2dec(rsa->e);
+    	BIO_printf(out, "public exponent:\n%ld\n\n", tmpstr);
+        OPENSSL_free(tmpstr);
+    
+        tmpstr = BN_bn2dec(rsa->d);
+        BIO_printf(out, "private exponent:\n%s\n\n", tmpstr);
+        OPENSSL_free(tmpstr);
+        
+        BIO_printf(out, "Writing private key to 'private.pem'...");
+        if ((f_out = fopen("private.pem", "w")) == NULL)
+            goto err;
+        if (!PEM_write_RSAPrivateKey(f_out,rsa,enc,NULL,0,
+            (pem_password_cb *)password_callback,&cb_data))
+            goto err;
+        fclose(f_out);
+        BIO_printf(out, "OK\n");
+        
+        BIO_printf(out, "Writing public key to 'public.pem'...");
+        if ((f_out = fopen("public.pem", "w")) == NULL)
+            goto err;
+        if (!PEM_write_RSAPublicKey(f_out,rsa))
+            goto err;
+        fclose(f_out);
+        BIO_printf(out, "OK\n");
+
 	}
 
 	ret=0;
