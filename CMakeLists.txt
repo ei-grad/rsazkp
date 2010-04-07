@@ -4,8 +4,10 @@ project (RSAZKP)
 
 add_subdirectory (doc)
 
-add_executable (genrsa genrsa.c apps.c app_rand.c)
-add_executable (client client.c)
-add_executable (server server.c)
+add_library (apps STATIC apps.c app_rand.c)
 
-target_link_libraries (genrsa ssl)
+add_executable (genrsa genrsa.c)
+add_executable (rsazkp rsazkp.c client.c server.c)
+
+target_link_libraries (genrsa ssl apps)
+target_link_libraries (rsazkp ssl apps)

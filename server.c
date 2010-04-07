@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Andrew S. Grigorev, Chelyabinsk State University
+ * Copyright (c) 2009-2010 Andrew S. Grigorev, Chelyabinsk State University
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,12 +34,12 @@
 
 #include "config.h"
 
-void HandleClient(int sock){
+void Server_HandleClient(int sock){
 
     return;
 }
 
-int main(){
+int Server(){
     
     int server_socket;
     struct sockaddr_in server_sa;
@@ -76,7 +76,7 @@ int main(){
             }
         fprintf(stdout, "Client connected: %s\n",
             inet_ntoa(client_sa.sin_addr));
-        HandleClient(client_socket);
+        Server_HandleClient(client_socket);
     }
 
     return 0;

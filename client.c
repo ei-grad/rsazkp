@@ -28,9 +28,16 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "config.h"
+#include "apps.h"
+#include <openssl/err.h>
+#include <openssl/rsa.h>
+#include <openssl/bn.h>
+#include <openssl/pem.h>
 
-int Connect(char * address){
+#undef PROG
+#define PROG client
+
+int Connect(char * address, int port){
     int sock;
     struct sockaddr_in server;
 
@@ -44,7 +51,7 @@ int Connect(char * address){
     memset(&server, 0, sizeof(server));       /* Clear struct */
     server.sin_family = AF_INET;                  /* Internet/IP */
     server.sin_addr.s_addr = inet_addr(address);  /* IP address */
-    server.sin_port = htons(PORT);                /* server port */
+    server.sin_port = htons(port);                /* server port */
     
     /* Establish connection */
     if (connect(sock, (struct sockaddr *) &server, sizeof(server)) < 0) {
@@ -55,15 +62,30 @@ int Connect(char * address){
     return sock;
 }
 
-int main(int argc, char * argv[]){
+int client(int argc, char * argv[]){
+    int ret = 0;
 
-    if (argc != 2) {
+    /*if (argc != 2) {
         fprintf(stderr, "USAGE: client <server_ip>\n");
         exit(1);
-    }
+    }*/
+    
+    FILE * f;
+    if ((f = fopen("private.pem", "r")) == NULL)
+        goto err;
+    PW_CB_DATA cb_data;
+    RSA *rsa = RSA_new();
+    if (!PEM_read_RSAPrivateKey(f, &rsa, (pem_password_cb *) password_callback, &cb_data))
+        goto err;
 
-    int sock = Connect(argv[2]);
+    //int sock = Connect(argv[2]);
 
+err:
+    if (rsa) RSA_free(rsa);
+    if (ret != 0)
+        ERR_print_errors_fp(stderr);
+    apps_shutdown();
+    OPENSSL_EXIT(ret);
     return 0;
 }
 
