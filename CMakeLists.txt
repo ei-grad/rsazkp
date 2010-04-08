@@ -10,4 +10,4 @@ add_executable (genrsa genrsa.c)
 add_executable (rsazkp rsazkp.c client.c server.c)
 
 target_link_libraries (genrsa ssl apps)
-target_link_libraries (rsazkp ssl apps)
+target_link_libraries (rsazkp ssl)
