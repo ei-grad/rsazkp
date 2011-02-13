@@ -163,7 +163,7 @@ int serverReadKey(Server * server, char * key) {
     if (server->rsa == NULL)
         return 1;
 
-    if(PEM_read_RSAPublicKey(f, &server->rsa, (pem_password_cb *) password_callback, NULL) == 0) {
+    if(PEM_read_RSA_PUBKEY(f, &server->rsa, (pem_password_cb *) password_callback, NULL) == 0) {
         ERR_print_errors_fp(stderr);
         return 1;
     }

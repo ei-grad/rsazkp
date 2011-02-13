@@ -17,7 +17,7 @@ void destroy_ui_method(void) {
 	}
 }
 
-int init_io() {
+int init_bio() {
 	bio_out = BIO_new_fp(stdout, BIO_NOCLOSE);
 	bio_err = BIO_new_fp(stderr, BIO_NOCLOSE);
 	return 0;
