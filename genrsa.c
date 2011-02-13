@@ -95,7 +95,6 @@ int MAIN(int argc, char **argv)
 	int ret=1;
 	int i,num=DEFBITS;
 	long l;
-	int use_x931 = 0;
 	const EVP_CIPHER *enc=NULL;
 	unsigned long f4=RSA_F4;
 	char *outfile=NULL;
@@ -106,9 +105,9 @@ int MAIN(int argc, char **argv)
 	char *inrand=NULL;
 	BIO *out=NULL;
 	BIGNUM *bn = BN_new();
-	RSA *rsa = RSA_new();
+	RSA *rsa = NULL;
 
-	if(!bn || !rsa) goto err;
+	if(!bn) goto err;
 
 	apps_startup();
 	BN_GENCB_set(&cb, genrsa_cb, bio_err);
@@ -139,8 +138,6 @@ int MAIN(int argc, char **argv)
 			f4=3;
 		else if (strcmp(*argv,"-F4") == 0 || strcmp(*argv,"-f4") == 0)
 			f4=RSA_F4;
-		else if (strcmp(*argv,"-x931") == 0)
-			use_x931 = 1;
 #ifndef OPENSSL_NO_ENGINE
 		else if (strcmp(*argv,"-engine") == 0)
 			{
@@ -268,18 +265,15 @@ bad:
 
 	BIO_printf(bio_err,"Generating RSA private key, %d bit long modulus\n",
 		num);
+#ifdef OPENSSL_NO_ENGINE
+	rsa = RSA_new();
+#else
+	rsa = RSA_new_method(e);
+#endif
+	if (!rsa)
+		goto err;
 
-	if (use_x931)
-		{
-		BIGNUM *pubexp;
-		pubexp = BN_new();
-		if (!BN_set_word(pubexp, f4))
-			goto err;
-		if (!RSA_X931_generate_key_ex(rsa, num, pubexp, &cb))
-			goto err;
-		BN_free(pubexp);
-		}
-	else if(!BN_set_word(bn, f4) || !RSA_generate_key_ex(rsa, num, bn, &cb))
+	if(!BN_set_word(bn, f4) || !RSA_generate_key_ex(rsa, num, bn, &cb))
 		goto err;
 		
 	app_RAND_write_file(NULL, bio_err);
@@ -295,44 +289,14 @@ bad:
 #endif
 		l+=rsa->e->d[i];
 		}
-
+	BIO_printf(bio_err,"e is %ld (0x%lX)\n",l,l);
 	{
-	
-        FILE * f_out;
-        char * tmpstr;
-        PW_CB_DATA cb_data;
-        cb_data.password = passout;
-        cb_data.prompt_info = outfile;
-    
-        tmpstr = BN_bn2dec(rsa->n);
-        BIO_printf(out, "public modulus: \n%s\n\n", tmpstr);
-        OPENSSL_free(tmpstr);
-
-        tmpstr = BN_bn2dec(rsa->e);
-    	BIO_printf(out, "public exponent:\n%ld\n\n", tmpstr);
-        OPENSSL_free(tmpstr);
-    
-        tmpstr = BN_bn2dec(rsa->d);
-        BIO_printf(out, "private exponent:\n%s\n\n", tmpstr);
-        OPENSSL_free(tmpstr);
-        
-        BIO_printf(out, "Writing private key to 'private.pem'...");
-        if ((f_out = fopen("private.pem", "w")) == NULL)
-            goto err;
-        if (!PEM_write_RSAPrivateKey(f_out,rsa,enc,NULL,0,
-            (pem_password_cb *)password_callback,&cb_data))
-            goto err;
-        fclose(f_out);
-        BIO_printf(out, "OK\n");
-        
-        BIO_printf(out, "Writing public key to 'public.pem'...");
-        if ((f_out = fopen("public.pem", "w")) == NULL)
-            goto err;
-        if (!PEM_write_RSAPublicKey(f_out,rsa))
-            goto err;
-        fclose(f_out);
-        BIO_printf(out, "OK\n");
-
+	PW_CB_DATA cb_data;
+	cb_data.password = passout;
+	cb_data.prompt_info = outfile;
+	if (!PEM_write_bio_RSAPrivateKey(out,rsa,enc,NULL,0,
+		(pem_password_cb *)password_callback,&cb_data))
+		goto err;
 	}
 
 	ret=0;
